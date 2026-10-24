@@ -1,0 +1,268 @@
+<!doctype html><meta charset="utf-8"><title>Repsy</title>
+<style>
+body{font:16px -apple-system,sans-serif;max-width:680px;margin:48px auto;padding:0 20px 48px;background:#10151c;color:#f5f7fa}
+a{color:#8eb6ff}
+button{font:inherit;padding:12px;margin:5px;border:0;border-radius:9px;background:#2a7fff;color:white;cursor:pointer}
+button.ghost{background:#243041}
+h1{font-size:28px;margin:0 0 8px}
+h2{font-size:18px;margin:28px 0 8px}
+.top{display:flex;align-items:baseline;justify-content:space-between;gap:12px}
+#count{font-size:48px;font-weight:700}
+#today-activities{font-size:18px;margin:4px 0 12px}
+.hint{color:#9aa7b8;font-size:13px}
+.row{display:flex;align-items:center;gap:8px;margin:6px 0;flex-wrap:wrap}
+input{font:inherit;padding:8px;border-radius:8px;border:0;background:#1a222d;color:#f5f7fa;width:72px}
+.nav{display:flex;align-items:center;gap:8px}
+.nav strong{min-width:140px;text-align:center}
+.legend{display:flex;gap:14px;flex-wrap:wrap;font-size:13px;color:#c5d0dc;margin:8px 0 10px}
+.sw{display:inline-block;width:10px;height:10px;border-radius:99px;margin-right:4px;vertical-align:middle}
+.cal{display:grid;grid-template-columns:repeat(7,1fr);gap:4px}
+.dow{text-align:center;font-size:12px;color:#9aa7b8}
+.day{min-height:78px;background:#1a222d;border-radius:8px;padding:4px 5px;font-size:11px;line-height:1.3}
+.day.off{opacity:.38}
+.day.today{outline:1px solid #f5f7fa}
+.num{font-weight:700;font-size:12px}
+.bar{display:flex;height:18px;border-radius:99px;overflow:hidden;margin-top:4px}
+.bar i{flex:1;display:flex;align-items:center;justify-content:center;font-size:11px;font-style:normal;font-weight:700;color:#10151c}
+input.wide{width:220px}
+input.unit{width:70px}
+input[type=datetime-local]{width:auto}
+.last{color:#c5d0dc;font-size:13px}
+.last.never{color:#9aa7b8}
+#protein-total{font-size:18px;margin:4px 0 8px}
+.pep{color:#3ccf6e}
+.stack-ok{color:#7dffa3}
+.stack-no{color:#9aa7b8}
+#stack-status{font-size:15px;margin:4px 0 8px}
+button.stack-on{outline:2px solid #f5f7fa;outline-offset:1px}
+</style>
+<div class="top"><h1>💪 Repsy</h1><a href="/calendar">Calendar</a></div>
+<div id="count">Loading…</div>
+<p id="today-activities">Sauna — · Shaky chair — · Cannabis —</p>
+<div id="buttons"></div>
+<p id="history"></p>
+<div id="activity-buttons">
+  <div class="row">
+    <input id="min-sauna" type="number" min="1" max="300" value="20">
+    <button id="log-sauna" style="background:#ff7a2a">🔥 Sauna</button>
+    <span class="hint" id="sauna-default">default 20 min</span>
+  </div>
+  <div class="row">
+    <input id="min-shaky_chair" type="number" min="1" max="300" value="15">
+    <button id="log-shaky" style="background:#2ad4c8;color:#10151c">🪑 Shaky chair</button>
+    <span class="hint" id="shaky-default">default 15 min</span>
+    <span class="hint">vibration plate</span>
+  </div>
+  <div class="row">
+    <input id="puffs-cannabis" type="number" min="1" max="100" value="1">
+    <button id="log-cannabis" style="background:#b06cff;color:#10151c">🌿 Cannabis</button>
+    <span class="hint" id="cannabis-default">default 1 puff, added to today</span>
+  </div>
+</div>
+<p class="hint" id="defaults-line">Defaults: Sauna 20 min, Shaky chair 15 min, Cannabis 1 puff. These do not count toward the 5-set goal.</p>
+<button class="ghost" onclick="undoActivity()">Undo last activity</button>
+<h2 id="stack-h">🌅 Morning stack</h2>
+<div id="stack-status">Meditation — · Morning pages —</div>
+<div class="row">
+  <button id="stack-med-yes" style="background:#5b8cff">🧘 Meditation yes</button>
+  <button id="stack-med-no" class="ghost">Meditation no</button>
+  <button id="stack-pages-yes" style="background:#8b7cff">📝 Morning pages yes</button>
+  <button id="stack-pages-no" class="ghost">Morning pages no</button>
+</div>
+<button class="ghost" onclick="undoStack()">Undo morning stack</button>
+<p class="hint">Morning stack is tracking only — it does not count toward the set goal.</p>
+<h2 id="protocol">💉 Peptide protocol</h2>
+<div id="peptide-rows"></div>
+<p id="doses-today" class="hint"></p>
+<h2 id="protein-h">🥤 Protein</h2>
+<div id="protein-total">0 g protein today</div>
+<div class="row">
+  <input id="protein-grams" type="number" min="1" max="500" placeholder="g">
+  <button id="log-protein" style="background:#f5c542;color:#10151c">🥤 Log protein</button>
+  <span id="protein-quick"></span>
+</div>
+<p id="protein-list" class="hint"></p>
+<div class="row">
+  <input id="extra-note" class="wide" placeholder="optional note (dose/protein)">
+  <input id="extra-at" type="datetime-local" title="optional: backdate (leave blank for now)">
+  <span class="hint">note + time apply to the next peptide/protein log; blank time = now</span>
+</div>
+<button class="ghost" onclick="undoKind('/undo-peptide')">Undo last dose</button>
+<button class="ghost" onclick="undoKind('/undo-protein')">Undo last protein</button>
+<p class="hint">Peptides and protein do not count toward the set goal.</p>
+<h2 id="calendar">Calendar</h2>
+<div class="nav">
+  <button type="button" class="ghost" id="prev">←</button>
+  <strong id="month-label"></strong>
+  <button type="button" class="ghost" id="next">→</button>
+</div>
+<div class="legend" id="legend"></div>
+<div class="cal" id="dow"></div>
+<div class="cal" id="grid"></div>
+<script>
+const MONTHS=['January','February','March','April','May','June','July','August','September','October','November','December'];
+const DOW=['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
+let month='';
+const $=id=>document.getElementById(id);
+function el(tag,cls,text){const n=document.createElement(tag);if(cls)n.className=cls;if(text!=null)n.textContent=text;return n}
+function shift(ym,delta){let [y,m]=ym.split('-').map(Number);m+=delta;if(m<1){m=12;y--}if(m>12){m=1;y++}return y+'-'+String(m).padStart(2,'0')}
+async function refresh(){const q=month?('?month='+encodeURIComponent(month)):'';paint(await (await fetch('/data'+q)).json())}
+function paint(d){
+  month=d.calendar.month;
+  const defs=d.defaults||{};
+  const today=d.today_activities||{};
+  $('count').textContent=`${d.count}/${d.goal} sets today`;
+  $('today-activities').textContent=`Sauna ${today.sauna_minutes||0} min · Shaky chair ${today.shaky_chair_minutes||0} min · Cannabis ${today.cannabis_puffs||0} puffs`;
+  $('sauna-default').textContent=`default ${defs.sauna_minutes} min`;
+  $('shaky-default').textContent=`default ${defs.shaky_chair_minutes} min`;
+  $('cannabis-default').textContent=`default ${defs.cannabis_puffs} puff, added to today`;
+  $('defaults-line').textContent=`Defaults: Sauna ${defs.sauna_minutes} min, Shaky chair ${defs.shaky_chair_minutes} min, Cannabis ${defs.cannabis_puffs} puff. These do not count toward the 5-set goal.`;
+  if(document.activeElement!==$('min-sauna')) $('min-sauna').value=defs.sauna_minutes;
+  if(document.activeElement!==$('min-shaky_chair')) $('min-shaky_chair').value=defs.shaky_chair_minutes;
+  if(document.activeElement!==$('puffs-cannabis')) $('puffs-cannabis').value=defs.cannabis_puffs;
+  $('buttons').innerHTML=d.exercises.map(e=>`<button onclick='log(${JSON.stringify(JSON.stringify({exercise:e.key,label:e.label,emoji:e.emoji}))})'>${e.emoji} ${e.label}</button>`).join('')+'<button class="ghost" onclick="undo()">Undo last set</button>';
+  $('history').textContent=d.sets.map(s=>`${s.emoji} ${s.label}`.trim()).join(' · ')||'No sets yet today';
+  const legend=$('legend');legend.replaceChildren();
+  const items=[{label:'Workout sets',color:d.set_color||'#2a7fff'}].concat((d.activity_types||[]).map(a=>({label:a.aka?`${a.label} (${a.aka})`:a.label,color:a.color})));
+  items.push({label:'Peptides',color:d.peptide_color||'#3ccf6e'});
+  items.push({label:'Protein (g)',color:(d.protein_config||{}).color||'#f5c542'});
+  items.push({label:'Morning stack',color:'#5b8cff'});
+  for(const item of items){const s=el('span');const sw=el('span','sw');sw.style.background=item.color;s.append(sw,document.createTextNode(item.label));legend.append(s)}
+  $('month-label').textContent=MONTHS[Number(month.slice(5))-1]+' '+month.slice(0,4);
+  const dow=$('dow');dow.replaceChildren();DOW.forEach(name=>dow.append(el('div','dow',name)));
+  const grid=$('grid');grid.replaceChildren();
+  for(const day of d.calendar.days){
+    const cell=el('div','day'+(day.in_month?'':' off')+(day.is_today?' today':''));
+    cell.append(el('div','num',String(Number(day.date.slice(8)))));
+    const values=day.values||{};
+    if(values.sets)cell.append(el('div',null,values.sets+(values.sets===1?' set':' sets')));
+    const bits=[];
+    if(values.sets)bits.push({color:d.set_color||'#2a7fff',text:''});
+    for(const a of d.activity_types||[]){
+      const v=values[a.key]||0;if(!v)continue;
+      if(a.kind==='puffs'){
+        cell.append(el('div',null,`${v} puffs`));
+        bits.push({color:a.color,text:String(v)});
+      }else{
+        cell.append(el('div',null,`${v}m ${a.label}`));
+        bits.push({color:a.color,text:''});
+      }
+    }
+    for(const dz of day.doses||[]){
+      const line=el('div','pep',`💉 ${dz.short}`);line.title=dz.dose;cell.append(line);
+    }
+    if((day.doses||[]).length)bits.push({color:d.peptide_color||'#3ccf6e',text:'💉'});
+    const pr=day.protein||{};
+    if(pr.entries){
+      const g=pr.grams||0;const unk=pr.unknown_entries||0;
+      cell.append(el('div',null,`${g}g protein`+(unk?` +${unk}`:'')));
+      bits.push({color:(d.protein_config||{}).color||'#f5c542',text:g?String(g):'✓'});
+    }
+    if(values.meditation||values.morning_pages||values.morning_stack){
+      const parts=[];
+      if(values.meditation)parts.push('🧘');
+      if(values.morning_pages)parts.push('📝');
+      if(!parts.length)parts.push('🌅');
+      cell.append(el('div',null,parts.join(' ')+' stack'));
+      bits.push({color:'#5b8cff',text:parts.join('')||'✓'});
+    }
+    if(bits.length){const bar=el('div','bar');for(const b of bits){const i=document.createElement('i');i.style.background=b.color;i.textContent=b.text;bar.append(i)}cell.append(bar)}
+    grid.append(cell);
+  }
+  paintProtocol(d);
+  paintStack(d);
+  if(location.pathname==='/calendar')$('calendar').scrollIntoView();
+}
+function fmtDose(x){return x.amount==null?'dose not recorded':`${x.amount} ${x.unit||''}`.trim()}
+function fmtTime(ts){const t=new Date(ts);return t.toLocaleTimeString([], {hour:'numeric',minute:'2-digit'})}
+function paintProtocol(d){
+  const rows=$('peptide-rows');
+  const focused=document.activeElement&&document.activeElement.closest&&document.activeElement.closest('#peptide-rows');
+  if(!focused){
+    rows.replaceChildren();
+    for(const p of d.peptide_types||[]){
+      const row=el('div','row');
+      const amt=el('input');amt.type='number';amt.step='any';amt.min='0';amt.id='amt-'+p.key;
+      amt.placeholder='dose';if(p.default_amount!=null)amt.value=p.default_amount;
+      const unit=el('input','unit');unit.id='unit-'+p.key;unit.value=p.unit||'';unit.placeholder='unit';
+      const btn=el('button',null,`${p.emoji||'💉'} ${p.label}`);
+      btn.style.background=p.color||d.peptide_color||'#3ccf6e';btn.style.color='#10151c';
+      btn.onclick=()=>logPeptide(p.key);
+      const info=(d.last_doses||{})[p.key];
+      const last=el('span','last'+(info?'':' never'),info?`last ${p.short||p.label}: ${info.display} · ${info.dose}`:`last ${p.short||p.label}: never`);
+      const hint=el('span','hint',p.default_amount!=null?`default ${p.default_amount} ${p.unit||''}`:'no default dose');
+      row.append(amt,unit,btn,last,hint);rows.append(row);
+    }
+  }
+  $('doses-today').textContent=(d.doses||[]).length?'Today: '+d.doses.map(x=>`${x.emoji||'💉'} ${x.label} ${fmtDose(x)} @ ${fmtTime(x.ts)}`+(x.note?` (${x.note})`:'')).join(' · '):'No doses today';
+  const pt=d.protein_today||{grams:0,unknown_entries:0};
+  $('protein-total').textContent=`${pt.grams} g protein today`+(pt.unknown_entries?` (+${pt.unknown_entries} unweighed)`:'');
+  const pc=d.protein_config||{};
+  const quick=$('protein-quick');quick.replaceChildren();
+  for(const q of pc.quick||[]){
+    const b=el('button','ghost',`${q.emoji||pc.emoji||'🥤'} ${q.label}`+(q.grams!=null?` ${q.grams}g`:''));
+    b.onclick=()=>logProtein(q.grams,q.grams==null?`1 ${q.key||'serving'}`:null,q.key);
+    quick.append(b);
+  }
+  $('protein-list').textContent=(d.protein||[]).map(x=>`${x.grams!=null?x.grams+'g':'? g'}${x.source?' '+x.source:''}${x.note?' ('+x.note+')':''} @ ${fmtTime(x.ts)}`).join(' · ')||'No protein logged today';
+}
+function extras(){
+  const out={};const n=$('extra-note').value.trim();const at=$('extra-at').value;
+  if(n)out.note=n;if(at)out.at=at.length===16?at+':00':at;return out;
+}
+function clearExtras(){$('extra-note').value='';$('extra-at').value=''}
+async function postJSON(path,body){
+  const r=await fetch(path+(month?('?month='+encodeURIComponent(month)):''),{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(body||{})});
+  const d=await r.json();if(!r.ok){alert(d.error||'Could not log');return null}return d;
+}
+async function logPeptide(key){
+  const raw=$('amt-'+key).value.trim();const unit=$('unit-'+key).value.trim();
+  const body=Object.assign({name:key,amount:raw===''?null:Number(raw)},raw!==''&&unit?{unit}:{},extras());
+  const d=await postJSON('/peptide',body);if(d){clearExtras();document.activeElement&&document.activeElement.blur();paint(d)}
+}
+async function logProtein(grams,note,source){
+  const body=Object.assign({grams},extras());
+  if(note&&!body.note)body.note=note;if(source)body.source=source;
+  const d=await postJSON('/protein',body);if(d){clearExtras();paint(d)}
+}
+$('log-protein').onclick=()=>{const raw=$('protein-grams').value.trim();if(raw===''&&!$('extra-note').value.trim()){alert('Enter grams');return}logProtein(raw===''?null:Number(raw));$('protein-grams').value=''};
+async function undoKind(path){const d=await postJSON(path,{});if(d)paint(d)}
+async function log(x){await fetch('/log',{method:'POST',headers:{'Content-Type':'application/json'},body:x});refresh()}
+async function logActivity(activity,extra){
+  const r=await fetch('/log'+(month?('?month='+encodeURIComponent(month)):''),{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(Object.assign({activity},extra))});
+  const d=await r.json();if(!r.ok){alert(d.error||'Could not log');return}paint(d)
+}
+function numOrEmpty(id){const raw=$(id).value.trim();return raw===''?null:Number(raw)}
+$('log-sauna').onclick=()=>{const n=numOrEmpty('min-sauna');logActivity('sauna',n==null?{}:{minutes:n})};
+$('log-shaky').onclick=()=>{const n=numOrEmpty('min-shaky_chair');logActivity('shaky_chair',n==null?{}:{minutes:n})};
+$('log-cannabis').onclick=()=>{const n=numOrEmpty('puffs-cannabis');logActivity('cannabis',n==null?{}:{puffs:n})};
+async function undo(){await fetch('/undo',{method:'POST'});refresh()}
+async function undoActivity(){await fetch('/undo-activity',{method:'POST'});refresh()}
+function stackLabel(v){return v===true?'yes':(v===false?'no':'—')}
+function paintStack(d){
+  const s=d.morning_stack;
+  if(!s){
+    $('stack-status').textContent='Meditation — · Morning pages — (not logged)';
+  }else{
+    $('stack-status').innerHTML=
+      `Meditation <span class="${s.meditation?'stack-ok':'stack-no'}">${stackLabel(s.meditation)}</span>`+
+      ` · Morning pages <span class="${s.morning_pages?'stack-ok':'stack-no'}">${stackLabel(s.morning_pages)}</span>`+
+      (s.at?` · logged ${fmtTime(s.at)}`:'');
+  }
+  const on=(id,yes)=>{const b=$(id);if(!b)return;b.classList.toggle('stack-on',!!yes)};
+  on('stack-med-yes',s&&s.meditation===true);on('stack-med-no',s&&s.meditation===false);
+  on('stack-pages-yes',s&&s.morning_pages===true);on('stack-pages-no',s&&s.morning_pages===false);
+}
+async function logStack(patch){
+  const body=Object.assign({},patch,extras());
+  const d=await postJSON('/stack',body);if(d){clearExtras();paint(d)}
+}
+async function undoStack(){const d=await postJSON('/undo-stack',{});if(d)paint(d)}
+$('stack-med-yes').onclick=()=>logStack({meditation:true});
+$('stack-med-no').onclick=()=>logStack({meditation:false});
+$('stack-pages-yes').onclick=()=>logStack({morning_pages:true});
+$('stack-pages-no').onclick=()=>logStack({morning_pages:false});
+$('prev').onclick=()=>{month=shift(month,-1);refresh()};
+$('next').onclick=()=>{month=shift(month,1);refresh()};
+refresh();
+</script>

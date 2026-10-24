@@ -1,0 +1,5 @@
+# Repsy is a single-user macOS menu-bar app: naive local-time datetimes are the
+# design (DTZ), ValueError is the server's 400 contract for bad input (TRY004),
+# and the menu-bar display must never crash on a tracking error (BLE001/S110).
+[lint]
+ignore = ["DTZ005", "DTZ011", "TRY004", "BLE001", "S110"]
