@@ -36,6 +36,16 @@ profile or for an exported copy:
 REPSY_HOME="$PWD/example-data" python web.py
 ```
 
+Export and import a complete profile when moving to another Mac:
+
+```bash
+python transfer.py export ~/Desktop/repsy-profile.json
+REPSY_HOME="$HOME/.repsy" python transfer.py import ~/Desktop/repsy-profile.json
+```
+
+The import replaces the current profile. Stop Repsy first and keep a backup of
+`~/.repsy` before importing.
+
 ## Data and sharing
 
 The repository contains code only. Personal logs and configuration are excluded

@@ -4,6 +4,7 @@ import pytest
 
 import server
 import store
+import transfer
 
 
 @pytest.fixture()
@@ -47,3 +48,15 @@ def test_web_api_supports_month_calendar(isolated_data):
     assert response.status_code == 200
     assert payload["calendar"]["month"] == "2026-02"
     assert len(payload["calendar"]["days"]) >= 28
+
+
+def test_profile_export_and_import(isolated_data, tmp_path):
+    store.add_set("pushups", "Pushups", "💪")
+    export_path = tmp_path / "profile.json"
+    transfer.export_profile(export_path)
+
+    store.add_set("squats", "Squats", "🦵")
+    transfer.import_profile(export_path)
+
+    assert len(store.load_log()["sets"]) == 1
+    assert store.load_log()["sets"][0]["label"] == "Pushups"
