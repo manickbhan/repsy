@@ -10,7 +10,24 @@ It has two parts:
 All data stays on the computer in `~/.repsy/` as JSON. The web server binds to
 `127.0.0.1`, so it is not published to the network by default.
 
-## Run it
+## Install on a Mac
+
+Clone or download this private repository, then run the installer:
+
+```bash
+./install.sh
+```
+
+The installer creates a private virtual environment inside the repo, installs
+Repsy's dependencies, and starts Repsy at login with a macOS LaunchAgent. It
+never uploads your logs or connects to an AI service. Remove the app later with:
+
+```bash
+launchctl bootout "gui/$(id -u)" "$HOME/Library/LaunchAgents/com.manick.repsy.plist"
+rm -f "$HOME/Library/LaunchAgents/com.manick.repsy.plist"
+```
+
+## Run it manually
 
 Requires macOS and Python 3.12 or newer.
 
