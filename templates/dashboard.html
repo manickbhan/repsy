@@ -38,7 +38,7 @@ button.stack-on{outline:2px solid #f5f7fa;outline-offset:1px}
 </style>
 <div class="top"><h1>💪 Repsy</h1><a href="/calendar">Calendar</a></div>
 <div id="count">Loading…</div>
-<p id="today-activities">Sauna — · Shaky chair — · Cannabis —</p>
+<p id="today-activities">Sauna — · Shaky chair —</p>
 <div id="buttons"></div>
 <p id="history"></p>
 <div id="activity-buttons">
@@ -53,13 +53,8 @@ button.stack-on{outline:2px solid #f5f7fa;outline-offset:1px}
     <span class="hint" id="shaky-default">default 15 min</span>
     <span class="hint">vibration plate</span>
   </div>
-  <div class="row">
-    <input id="puffs-cannabis" type="number" min="1" max="100" value="1">
-    <button id="log-cannabis" style="background:#b06cff;color:#10151c">🌿 Cannabis</button>
-    <span class="hint" id="cannabis-default">default 1 puff, added to today</span>
-  </div>
 </div>
-<p class="hint" id="defaults-line">Defaults: Sauna 20 min, Shaky chair 15 min, Cannabis 1 puff. These do not count toward the 5-set goal.</p>
+<p class="hint" id="defaults-line">Defaults: Sauna 20 min, Shaky chair 15 min. These do not count toward the 5-set goal.</p>
 <button class="ghost" onclick="undoActivity()">Undo last activity</button>
 <h2 id="stack-h">🌅 Morning stack</h2>
 <div id="stack-status">Meditation — · Morning pages —</div>
@@ -112,14 +107,12 @@ function paint(d){
   const defs=d.defaults||{};
   const today=d.today_activities||{};
   $('count').textContent=`${d.count}/${d.goal} sets today`;
-  $('today-activities').textContent=`Sauna ${today.sauna_minutes||0} min · Shaky chair ${today.shaky_chair_minutes||0} min · Cannabis ${today.cannabis_puffs||0} puffs`;
+  $('today-activities').textContent=`Sauna ${today.sauna_minutes||0} min · Shaky chair ${today.shaky_chair_minutes||0} min`;
   $('sauna-default').textContent=`default ${defs.sauna_minutes} min`;
   $('shaky-default').textContent=`default ${defs.shaky_chair_minutes} min`;
-  $('cannabis-default').textContent=`default ${defs.cannabis_puffs} puff, added to today`;
-  $('defaults-line').textContent=`Defaults: Sauna ${defs.sauna_minutes} min, Shaky chair ${defs.shaky_chair_minutes} min, Cannabis ${defs.cannabis_puffs} puff. These do not count toward the 5-set goal.`;
+  $('defaults-line').textContent=`Defaults: Sauna ${defs.sauna_minutes} min, Shaky chair ${defs.shaky_chair_minutes} min. These do not count toward the 5-set goal.`;
   if(document.activeElement!==$('min-sauna')) $('min-sauna').value=defs.sauna_minutes;
   if(document.activeElement!==$('min-shaky_chair')) $('min-shaky_chair').value=defs.shaky_chair_minutes;
-  if(document.activeElement!==$('puffs-cannabis')) $('puffs-cannabis').value=defs.cannabis_puffs;
   $('buttons').innerHTML=d.exercises.map(e=>`<button onclick='log(${JSON.stringify(JSON.stringify({exercise:e.key,label:e.label,emoji:e.emoji}))})'>${e.emoji} ${e.label}</button>`).join('')+'<button class="ghost" onclick="undo()">Undo last set</button>';
   $('history').textContent=d.sets.map(s=>`${s.emoji} ${s.label}`.trim()).join(' · ')||'No sets yet today';
   const legend=$('legend');legend.replaceChildren();
@@ -235,7 +228,6 @@ async function logActivity(activity,extra){
 function numOrEmpty(id){const raw=$(id).value.trim();return raw===''?null:Number(raw)}
 $('log-sauna').onclick=()=>{const n=numOrEmpty('min-sauna');logActivity('sauna',n==null?{}:{minutes:n})};
 $('log-shaky').onclick=()=>{const n=numOrEmpty('min-shaky_chair');logActivity('shaky_chair',n==null?{}:{minutes:n})};
-$('log-cannabis').onclick=()=>{const n=numOrEmpty('puffs-cannabis');logActivity('cannabis',n==null?{}:{puffs:n})};
 async function undo(){await fetch('/undo',{method:'POST'});refresh()}
 async function undoActivity(){await fetch('/undo-activity',{method:'POST'});refresh()}
 function stackLabel(v){return v===true?'yes':(v===false?'no':'—')}

@@ -33,8 +33,10 @@ def test_web_api_logs_and_rejects_bad_activity(isolated_data):
     client = server.create_app().test_client()
 
     response = client.post("/log", json={"exercise": "pushups", "label": "Pushups", "emoji": "💪"})
+    payload = response.get_json()
     assert response.status_code == 200
-    assert response.get_json()["count"] == 1
+    assert payload["count"] == 1
+    assert {item["key"] for item in payload["activity_types"]} == {"sauna", "shaky_chair"}
 
     response = client.post("/activity", json={"activity": "sauna", "minutes": 0})
     assert response.status_code == 400

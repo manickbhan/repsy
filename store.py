@@ -36,20 +36,10 @@ ACTIVITY_TYPES = [
         "color": "#2ad4c8",
         "aka": "vibration plate",
     },
-    {
-        "key": "cannabis",
-        "label": "Cannabis",
-        "emoji": "🌿",
-        "kind": "puffs",
-        "unit": "puffs",
-        "default": 1,
-        "color": "#b06cff",
-    },
 ]
 DEFAULTS = {
     "sauna_minutes": 20,
     "shaky_chair_minutes": 15,
-    "cannabis_puffs": 1,
 }
 ACTIVITY_ALIASES = {
     "vibration": "shaky_chair",
@@ -164,10 +154,6 @@ def resolved_defaults(cfg: dict | None = None) -> dict:
         out["shaky_chair_minutes"] = int(stored["shaky_chair_minutes"])
     elif (by_key.get("shaky_chair") or {}).get("default") is not None:
         out["shaky_chair_minutes"] = int(by_key["shaky_chair"]["default"])
-    if stored.get("cannabis_puffs") is not None:
-        out["cannabis_puffs"] = int(stored["cannabis_puffs"])
-    elif (by_key.get("cannabis") or {}).get("default") is not None:
-        out["cannabis_puffs"] = int(by_key["cannabis"]["default"])
     return out
 
 
@@ -177,6 +163,8 @@ def activity_types(cfg: dict | None = None) -> list:
     builtin = {a["key"]: a for a in ACTIVITY_TYPES}
     merged = []
     for item in cfg.get("activities") or ACTIVITY_TYPES:
+        if item.get("key") == "cannabis":
+            continue
         base = dict(builtin.get(item.get("key"), {}))
         base.update({k: v for k, v in item.items() if v is not None})
         if base.get("kind") == "flag":
@@ -190,10 +178,6 @@ def activity_types(cfg: dict | None = None) -> list:
             base["default"] = defs["shaky_chair_minutes"]
             base["unit"] = "minutes"
             base["kind"] = "duration"
-        elif key == "cannabis":
-            base["default"] = defs["cannabis_puffs"]
-            base["unit"] = "puffs"
-            base["kind"] = "puffs"
         merged.append(base)
     return merged
 
@@ -314,7 +298,7 @@ def add_activity(key: str, minutes=None, puffs=None, note: str | None = None, at
         save_log(log)
         return log
     if _blank(puffs):
-        puffs = defs["cannabis_puffs"] if key == "cannabis" else (spec.get("default") or 1)
+        puffs = spec.get("default") or 1
     n = _puffs(puffs)
     today = when.date().isoformat()
     for existing in acts:
@@ -370,7 +354,6 @@ def totals_on(log: dict, day: date) -> dict:
     return {
         "sauna_minutes": sum(int(a.get("minutes") or 0) for a in acts if a.get("activity") == "sauna"),
         "shaky_chair_minutes": sum(int(a.get("minutes") or 0) for a in acts if a.get("activity") == "shaky_chair"),
-        "cannabis_puffs": sum(int(a.get("puffs") or 0) for a in acts if a.get("activity") == "cannabis"),
     }
 
 

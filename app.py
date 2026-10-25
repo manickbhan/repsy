@@ -72,7 +72,7 @@ class RepsyApp(rumps.App):
 
     def _build_menu(self):
         self.status_item = rumps.MenuItem(f"Today: 0/{self.cfg['goal']}")
-        self.activity_item = rumps.MenuItem("Sauna — · Shaky chair — · Cannabis —")
+        self.activity_item = rumps.MenuItem("Sauna — · Shaky chair —")
         self.stack_item = rumps.MenuItem("🌅 Morning stack: —")
         self.peptide_item = rumps.MenuItem("💉 Last dose: —")
         self.protein_item = rumps.MenuItem("🥤 Protein today: 0g")
@@ -290,8 +290,7 @@ class RepsyApp(rumps.App):
         totals = store.totals_on(log, date.today())
         self.activity_item.title = (
             f"🔥 Sauna {totals['sauna_minutes']}m · "
-            f"🪑 Shaky chair {totals['shaky_chair_minutes']}m · "
-            f"🌿 Cannabis {totals['cannabis_puffs']} puffs"
+            f"🪑 Shaky chair {totals['shaky_chair_minutes']}m"
         )
         try:
             last = store.last_doses(log, self.cfg)
